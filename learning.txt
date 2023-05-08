@@ -1,4 +1,5 @@
 Link: https://stackoverflow.com/questions/51139711/hpc-cluster-select-the-number-of-cpus-and-threads-in-slurm-sbatch 
+
 you use mpi and do not care about where those cores are distributed: --ntasks=16
 you want to launch 16 independent processes (no communication): --ntasks=16
 you want those cores to spread across distinct nodes: --ntasks=16 and --ntasks-per-node=1 or --ntasks=16 and --nodes=16
@@ -7,3 +8,20 @@ you want 16 processes to spread across 8 nodes to have two processes per node: -
 you want 16 processes to stay on the same node: --ntasks=16 --ntasks-per-node=16
 you want one process that can use 16 cores for multithreading: --ntasks=1 --cpus-per-task=16
 you want 4 processes that can use 4 cores each for multithreading: --ntasks=4 --cpus-per-task=4
+
+
+
+
+if every node has 24 cores, is there any difference between these commands?
+
+sbatch --ntasks 24 [...]
+sbatch --ntasks 1 --cpus-per-task 24 [...]
+Answer: (by Matthew Mjelde)
+
+Yes there is a difference between those two submissions. You are correct that usually ntasks is for mpi and cpus-per-task is for multithreading, but let’s look at your commands:
+
+For your first example, the sbatch --ntasks 24 […] will allocate a job with 24 tasks. These tasks in this case are only 1 CPUs, but may be split across multiple nodes. So you get a total of 24 CPUs across multiple nodes.
+
+For your second example, the sbatch --ntasks 1 --cpus-per-task 24 [...] will allocate a job with 1 task and 24 CPUs for that task. Thus you will get a total of 24 CPUs on a single node.
+
+In other words, a task cannot be split across multiple nodes. Therefore, using --cpus-per-task will ensure it gets allocated to the same node, while using --ntasks can and may allocate it to multiple nodes.
